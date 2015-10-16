@@ -11,13 +11,10 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.arthurthompson.smartlockcodelab;
+package com.google.codelab.smartlock;
 
 import com.google.android.gms.auth.api.credentials.Credential;
 
-/**
- * Created by arthurthompson on 9/15/15.
- */
 public class CodelabUtil {
 
     public static boolean isValidCredential(Credential credential) {
@@ -34,4 +31,5 @@ public class CodelabUtil {
         }
         return false;
     }
+
 }

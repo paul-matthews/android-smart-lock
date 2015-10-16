@@ -11,18 +11,16 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.arthurthompson.smartlockcodelab;
+package com.google.codelab.smartlock;
 
-import org.junit.Test;
+public class UsernamesAndPasswords {
 
-import static org.junit.Assert.*;
+    public static String username1 = "username1";
+    public static String username2 = "username2";
+    public static String username3 = "username3";
 
-/**
- * To work on unit tests, switch the Test Artifact in the Build Variants view.
- */
-public class ExampleUnitTest {
-    @Test
-    public void addition_isCorrect() throws Exception {
-        assertEquals(4, 2 + 2);
-    }
+    public static String password1 = "password1";
+    public static String password2 = "password2";
+    public static String password3 = "password3";
+
 }

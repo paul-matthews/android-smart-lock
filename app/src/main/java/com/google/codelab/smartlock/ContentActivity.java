@@ -11,7 +11,7 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.arthurthompson.smartlockcodelab;
+package com.google.codelab.smartlock;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -23,6 +23,7 @@ import android.widget.Button;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.arthurthompson.smartlockcodelab.R;
 
 public class ContentActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
 

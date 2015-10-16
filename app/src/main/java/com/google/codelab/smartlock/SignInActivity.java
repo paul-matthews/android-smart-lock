@@ -11,7 +11,7 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.arthurthompson.smartlockcodelab;
+package com.google.codelab.smartlock;
 
 import android.content.Intent;
 import android.content.IntentSender;
@@ -31,6 +31,7 @@ import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.arthurthompson.smartlockcodelab.R;
 
 public class SignInActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
