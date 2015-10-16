@@ -21,6 +21,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.credentials.Credential;
@@ -102,6 +103,7 @@ public class SignInActivity extends AppCompatActivity implements GoogleApiClient
                     });
                 } else {
                     Log.d(TAG, "Credentials are invalid. Username or password are incorrect.");
+                    Toast.makeText(view.getContext(), "Credentials are invalid", Toast.LENGTH_LONG).show();
                 }
             }
         });
