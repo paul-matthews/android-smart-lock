@@ -17,6 +17,9 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -32,18 +35,16 @@ import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
-import com.google.arthurthompson.smartlockcodelab.R;
 
-public class SignInActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
+public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
 
-    private static final String TAG = "SignInActivity";
+    private static final String TAG = "MainActivity";
     private static final int RC_READ = 3;
     private static final int RC_SAVE = 1;
     private static final String IS_RESOLVING = "isResolving";
 
-    private TextInputLayout mUsernameTextInputLayout;
-    private TextInputLayout mPasswordTextInputLayout;
+
 
     // Add mGoogleApiClient and mIsResolving fields here.
     private GoogleApiClient mGoogleApiClient;
@@ -57,6 +58,16 @@ public class SignInActivity extends AppCompatActivity implements GoogleApiClient
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        boolean splash = getIntent().getBooleanExtra("splash", true);
+        Fragment fragment;
+        if (splash) {
+            fragment = new SplashFragment();
+        } else {
+            fragment = new SignInFragment();
+        }
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction().add(R.id.fragment_container, fragment).commit();
+
         if (savedInstanceState != null) {
             mIsResolving = savedInstanceState.getBoolean(IS_RESOLVING);
         }
@@ -66,56 +77,6 @@ public class SignInActivity extends AppCompatActivity implements GoogleApiClient
                 .enableAutoManage(this, 0, this)
                 .addApi(Auth.CREDENTIALS_API)
                 .build();
-
-        mUsernameTextInputLayout = (TextInputLayout) findViewById(R.id.usernameTextInputLayout);
-        mPasswordTextInputLayout = (TextInputLayout) findViewById(R.id.passwordTextInputLayout);
-
-        Button signInButton = (Button) findViewById(R.id.signInButton);
-        signInButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View view) {
-                String username = mUsernameTextInputLayout.getEditText().getText().toString();
-                String password = mPasswordTextInputLayout.getEditText().getText().toString();
-
-//                if (CodelabUtil.isValidCredential(username, password)) {
-//                    mUsername = username;
-//                    goToContent();
-//                } else {
-//                    Log.d(TAG, "Credentials are invalid. Username or password are incorrect.");
-//                }
-                Credential credential = new Credential.Builder(username)
-                        .setPassword(password)
-                        .build();
-                if (CodelabUtil.isValidCredential(credential)) {
-                    // Credential is valid so save it.
-                    Auth.CredentialsApi.save(mGoogleApiClient,
-                            credential).setResultCallback(new ResultCallback<Status>() {
-                        @Override
-                        public void onResult(Status status) {
-                            if (status.isSuccess()) {
-                                Log.d(TAG, "Credential saved");
-                                goToContent();
-                            } else {
-                                Log.d(TAG, "Attempt to save credential failed " + status.getStatusMessage() + " " + status.getStatusCode() );
-                                resolveResult(status, RC_SAVE);
-                            }
-                        }
-                    });
-                } else {
-                    Log.d(TAG, "Credentials are invalid. Username or password are incorrect.");
-                    Toast.makeText(view.getContext(), "Credentials are invalid", Toast.LENGTH_LONG).show();
-                }
-            }
-        });
-
-        Button clearButton = (Button) findViewById(R.id.clearButton);
-        clearButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mUsernameTextInputLayout.getEditText().setText("");
-                mPasswordTextInputLayout.getEditText().setText("");
-            }
-        });
     }
 
     @Override
@@ -167,6 +128,11 @@ public class SignInActivity extends AppCompatActivity implements GoogleApiClient
                             Credential credential = credentialRequestResult.getCredential();
                             processRetrievedCredential(credential);
                         } else {
+                            Fragment fragment = new SignInFragment();
+                            getSupportFragmentManager().beginTransaction()
+                                    .replace(R.id.fragment_container, fragment)
+                                    .addToBackStack(null)
+                                    .commit();
                             Status status = credentialRequestResult.getStatus();
                             if (status.getStatusCode() == CommonStatusCodes.SIGN_IN_REQUIRED) {
                                 // This is most likely the case where the user does not currently
@@ -209,11 +175,6 @@ public class SignInActivity extends AppCompatActivity implements GoogleApiClient
             } catch (IntentSender.SendIntentException e) {
                 Log.e(TAG, "STATUS: Failed to send resolution.", e);
             }
-        } else {
-            Log.e(TAG, "STATUS: FAIL");
-            if (requestCode == RC_SAVE) {
-                goToContent();
-            }
         }
     }
 
@@ -222,24 +183,13 @@ public class SignInActivity extends AppCompatActivity implements GoogleApiClient
         super.onActivityResult(requestCode, resultCode, data);
         Log.d(TAG, "onActivityResult:" + requestCode + ":" + resultCode + ":" + data);
 
-        switch (requestCode) {
-            case RC_READ:
-                if (resultCode == RESULT_OK) {
-                    Credential credential = data.getParcelableExtra(Credential.EXTRA_KEY);
-                    processRetrievedCredential(credential);
-                } else {
-                    Log.e(TAG, "Credential Read: NOT OK");
-                }
-                break;
-            case RC_SAVE:
-                Log.d(TAG, "Result code: " + resultCode);
-                if (resultCode == RESULT_OK) {
-                    Log.d(TAG, "Credential Save: OK");
-                } else {
-                    Log.e(TAG, "Credential Save Failed");
-                }
-                goToContent();
-                break;
+        if (requestCode == RC_READ) {
+            if (resultCode == RESULT_OK) {
+                Credential credential = data.getParcelableExtra(Credential.EXTRA_KEY);
+                processRetrievedCredential(credential);
+            } else {
+                Log.e(TAG, "Credential Read: NOT OK");
+            }
         }
         mIsResolving = false;
     }
@@ -250,7 +200,7 @@ public class SignInActivity extends AppCompatActivity implements GoogleApiClient
      */
     private void processRetrievedCredential(Credential credential) {
         if (CodelabUtil.isValidCredential(credential)) {
-            goToContent();
+            CodelabUtil.goToContent(this, credential);
         } else {
             // This is likely due to the credential being changed outside of Smart Lock,
             // ie: away from Android or Chrome. The credential should be deleted and the
@@ -260,13 +210,7 @@ public class SignInActivity extends AppCompatActivity implements GoogleApiClient
         }
     }
 
-    private void goToContent() {
-        Intent intent = new Intent(this, ContentActivity.class);
-        // intent.putExtra("username", mCredential.getId());
-        intent.putExtra("username", mUsername);
-        startActivity(intent);
-        // finish();
-    }
+
 
     /**
      * Delete the provided credential.

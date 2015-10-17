@@ -13,6 +13,9 @@
  */
 package com.google.codelab.smartlock;
 
+import android.content.Context;
+import android.content.Intent;
+
 import com.google.android.gms.auth.api.credentials.Credential;
 
 public class CodelabUtil {
@@ -30,6 +33,14 @@ public class CodelabUtil {
             return true;
         }
         return false;
+    }
+
+    public static void goToContent(Context context, Credential credential) {
+        Intent intent = new Intent(context, ContentActivity.class);
+        // intent.putExtra("username", mCredential.getId());
+        intent.putExtra("credential", credential);
+        context.startActivity(intent);
+        // finish();
     }
 
 }
