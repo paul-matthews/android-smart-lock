@@ -13,17 +13,15 @@
  */
 package com.google.codelab.smartlock;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Bundle;
-import android.support.design.widget.TextInputLayout;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
@@ -40,33 +38,31 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = "MainActivity";
-    private static final int RC_READ = 3;
     private static final int RC_SAVE = 1;
+    private static final int RC_READ = 3;
     private static final String IS_RESOLVING = "isResolving";
-
-
+    private static final String SPLASH_TAG = "splash_fragment";
+    private static final String SIGN_IN_TAG = "sign_in_fragment";
 
     // Add mGoogleApiClient and mIsResolving fields here.
     private GoogleApiClient mGoogleApiClient;
     private boolean mIsResolving;
-    // private Credential mCredential;
-
-    private String mUsername;
+    private boolean mIsRequesting;
+    private boolean mSplash;
+    private int mCurrentIndex;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        boolean splash = getIntent().getBooleanExtra("splash", true);
-        Fragment fragment;
-        if (splash) {
-            fragment = new SplashFragment();
+        mSplash = getIntent().getBooleanExtra("splash", true);
+        mCurrentIndex = -1;
+        if (mSplash) {
+            setFragment(0);
         } else {
-            fragment = new SignInFragment();
+            setFragment(1);
         }
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().add(R.id.fragment_container, fragment).commit();
 
         if (savedInstanceState != null) {
             mIsResolving = savedInstanceState.getBoolean(IS_RESOLVING);
@@ -93,9 +89,21 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         Log.d(TAG, "onConnected");
 
         if (!mIsResolving) {
-            // Request Credentials once connected. If credentials are retrieved the user will either be automatically
-            // signed in or will be presented with credential options to be used by the application for sign in.
-            requestCredentials();
+            if (mSplash) {
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Request Credentials once connected. If credentials are retrieved the user will either be automatically
+                        // signed in or will be presented with credential options to be used by the application for sign in.
+                        requestCredentials();
+                    }
+                }, 3000);
+            } else {
+                // Request Credentials once connected. If credentials are retrieved the user will either be automatically
+                // signed in or will be presented with credential options to be used by the application for sign in.
+                requestCredentials();
+            }
+
         }
     }
 
@@ -113,6 +121,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
      * Request Credentials from the Credentials API.
      */
     private void requestCredentials() {
+        setSignInEmabled(false);
+        mIsRequesting = true;
+
         CredentialRequest request = new CredentialRequest.Builder()
                 .setSupportsPasswordLogin(true)
                 .build();
@@ -121,6 +132,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 new ResultCallback<CredentialRequestResult>() {
                     @Override
                     public void onResult(CredentialRequestResult credentialRequestResult) {
+                        mIsRequesting = false;
                         if (credentialRequestResult.getStatus().isSuccess()) {
                             // Successfully read the credential without any user interaction, this
                             // means there was only a single credential and the user has auto
@@ -128,17 +140,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                             Credential credential = credentialRequestResult.getCredential();
                             processRetrievedCredential(credential);
                         } else {
-                            Fragment fragment = new SignInFragment();
-                            getSupportFragmentManager().beginTransaction()
-                                    .replace(R.id.fragment_container, fragment)
-                                    .addToBackStack(null)
-                                    .commit();
                             Status status = credentialRequestResult.getStatus();
+                            setFragment(1);
                             if (status.getStatusCode() == CommonStatusCodes.SIGN_IN_REQUIRED) {
                                 // This is most likely the case where the user does not currently
                                 // have any saved credentials and thus needs to provide a username
                                 // and password to sign in.
                                 Log.d(TAG, "Sign in required");
+                                setSignInEmabled(true);
                             } else if (status.getStatusCode() == CommonStatusCodes.RESOLUTION_REQUIRED) {
                                 // This is most likely the case where the user has multiple saved
                                 // credentials and needs to pick one.
@@ -150,6 +159,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     }
                 }
         );
+    }
+
+    private void setSignInEmabled(boolean enable) {
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag(SIGN_IN_TAG);
+        if (fragment != null && fragment.isVisible()) {
+            ((SignInFragment) fragment).setSignEnabled(enable);
+        }
+
     }
 
     /**
@@ -175,6 +192,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             } catch (IntentSender.SendIntentException e) {
                 Log.e(TAG, "STATUS: Failed to send resolution.", e);
             }
+        } else {
+            goToContent();
         }
     }
 
@@ -189,7 +208,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 processRetrievedCredential(credential);
             } else {
                 Log.e(TAG, "Credential Read: NOT OK");
+                //setSignInEmabled(true);
             }
+        } else if (requestCode == RC_SAVE) {
+            goToContent();
         }
         mIsResolving = false;
     }
@@ -200,17 +222,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
      */
     private void processRetrievedCredential(Credential credential) {
         if (CodelabUtil.isValidCredential(credential)) {
-            CodelabUtil.goToContent(this, credential);
+            goToContent();
         } else {
             // This is likely due to the credential being changed outside of Smart Lock,
             // ie: away from Android or Chrome. The credential should be deleted and the
             // user allowed to enter a valid credential.
             Log.d(TAG, "Retrieved credential invalid, so delete retrieved credential.");
+            Toast.makeText(this, "Retrieved credentials are invalid, so will be deleted.", Toast.LENGTH_LONG).show();
             deleteCredential(credential);
+            requestCredentials();
+            setSignInEmabled(false);
         }
     }
-
-
 
     /**
      * Delete the provided credential.
@@ -229,6 +252,55 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 }
             }
         });
+    }
+
+    private void setFragment(int index) {
+        if (mCurrentIndex != index) {
+            Fragment fragment;
+            String tag;
+            if (index == 0) {
+                fragment = new SplashFragment();
+                tag = SPLASH_TAG;
+                mCurrentIndex = 0;
+            } else {
+                fragment = new SignInFragment();
+                tag = SIGN_IN_TAG;
+                setSignInEmabled(true);
+                mCurrentIndex = 1;
+            }
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, fragment, tag)
+                    .commit();
+        }
+    }
+
+    protected void saveCredential(Credential credential) {
+        // Credential is valid so save it.
+        Auth.CredentialsApi.save(mGoogleApiClient, credential).setResultCallback(new ResultCallback<Status>() {
+            @Override
+            public void onResult(Status status) {
+                if (status.isSuccess()) {
+                    Log.d(TAG, "Credential saved");
+                    goToContent();
+                } else {
+                    Log.d(TAG, "Attempt to save credential failed " + status.getStatusMessage() + " " + status.getStatusCode());
+                    resolveResult(status, RC_SAVE);
+                }
+            }
+        });
+    }
+
+    protected void goToContent() {
+        startActivity(new Intent(this, ContentActivity.class));
+        finish();
+    }
+
+    protected boolean isResolving() {
+        return mIsResolving;
+    }
+
+    protected boolean isRequesting() {
+        return mIsRequesting;
     }
 
 }

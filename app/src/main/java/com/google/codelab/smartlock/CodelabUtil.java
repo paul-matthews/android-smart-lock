@@ -35,12 +35,21 @@ public class CodelabUtil {
         return false;
     }
 
-    public static void goToContent(Context context, Credential credential) {
-        Intent intent = new Intent(context, ContentActivity.class);
-        // intent.putExtra("username", mCredential.getId());
-        intent.putExtra("credential", credential);
-        context.startActivity(intent);
-        // finish();
+    public static boolean isValidUsernameSoFar(String username) {
+        return UsernamesAndPasswords.username1.startsWith(username) ||
+                UsernamesAndPasswords.username2.startsWith(username) ||
+                UsernamesAndPasswords.username3.startsWith(username);
+    }
+
+    public static boolean isValidPasswordSoFar(String username, String password) {
+        if (username.equals(UsernamesAndPasswords.username1) && UsernamesAndPasswords.password1.startsWith(password)) {
+            return true;
+        } else if (username.equals(UsernamesAndPasswords.username2) && UsernamesAndPasswords.password2.startsWith(password)) {
+            return true;
+        } else if (username.equals(UsernamesAndPasswords.username3) && UsernamesAndPasswords.password3.startsWith(password)) {
+            return true;
+        }
+        return false;
     }
 
 }
