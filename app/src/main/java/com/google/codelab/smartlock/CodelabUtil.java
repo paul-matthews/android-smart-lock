@@ -13,19 +13,22 @@
  */
 package com.google.codelab.smartlock;
 
-import android.content.Context;
-import android.content.Intent;
-
 import com.google.android.gms.auth.api.credentials.Credential;
 
 public class CodelabUtil {
 
+    /**
+     * Check whether or not given Credential matches credentials stored in UsernamesAndPasswords class.
+     */
     public static boolean isValidCredential(Credential credential) {
         String username = credential.getId();
         String password = credential.getPassword();
         return isValidCredential(username, password);
     }
 
+    /**
+     * Check whether or not given username and password pair exist in UsernamesAndPassword class.
+     */
     public static boolean isValidCredential(String username, String password) {
         if ((username.equals(UsernamesAndPasswords.username1) && password.equals(UsernamesAndPasswords.password1)) ||
                 (username.equals(UsernamesAndPasswords.username2) && password.equals(UsernamesAndPasswords.password2)) ||
@@ -35,18 +38,28 @@ public class CodelabUtil {
         return false;
     }
 
+    /**
+     * Check if given username starts an existing username in the UsernamesAndPassword class.
+     */
     public static boolean isValidUsernameSoFar(String username) {
         return UsernamesAndPasswords.username1.startsWith(username) ||
                 UsernamesAndPasswords.username2.startsWith(username) ||
                 UsernamesAndPasswords.username3.startsWith(username);
     }
 
+    /**
+     * Check if the password starts an existing password and matches an existing username in the
+     * UsernamesAndPassword class.
+     */
     public static boolean isValidPasswordSoFar(String username, String password) {
-        if (username.equals(UsernamesAndPasswords.username1) && UsernamesAndPasswords.password1.startsWith(password)) {
+        if (username.equals(UsernamesAndPasswords.username1) &&
+                UsernamesAndPasswords.password1.startsWith(password)) {
             return true;
-        } else if (username.equals(UsernamesAndPasswords.username2) && UsernamesAndPasswords.password2.startsWith(password)) {
+        } else if (username.equals(UsernamesAndPasswords.username2) &&
+                UsernamesAndPasswords.password2.startsWith(password)) {
             return true;
-        } else if (username.equals(UsernamesAndPasswords.username3) && UsernamesAndPasswords.password3.startsWith(password)) {
+        } else if (username.equals(UsernamesAndPasswords.username3) &&
+                UsernamesAndPasswords.password3.startsWith(password)) {
             return true;
         }
         return false;
