@@ -48,7 +48,6 @@ public class ContentActivity extends AppCompatActivity implements GoogleApiClien
                 Auth.CredentialsApi.disableAutoSignIn(mGoogleApiClient);
                 Intent intent = new Intent(v.getContext(), MainActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intent.putExtra("splash", false);
                 startActivity(intent);
                 finish();
             }

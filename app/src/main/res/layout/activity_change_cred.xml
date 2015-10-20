@@ -14,7 +14,7 @@
             android:id="@+id/username1EditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Username1"/>
+            android:hint="@string/username1_hint"/>
 
     </android.support.design.widget.TextInputLayout>
 
@@ -29,7 +29,7 @@
             android:id="@+id/password1EditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Password1"/>
+            android:hint="@string/password1_hint"/>
 
     </android.support.design.widget.TextInputLayout>
 
@@ -44,7 +44,7 @@
             android:id="@+id/username2EditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Username2"/>
+            android:hint="@string/username2_hint"/>
 
     </android.support.design.widget.TextInputLayout>
 
@@ -59,7 +59,7 @@
             android:id="@+id/password2EditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Password2"/>
+            android:hint="@string/password2_hint"/>
 
     </android.support.design.widget.TextInputLayout>
 
@@ -74,7 +74,7 @@
             android:id="@+id/username3EditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Username3"/>
+            android:hint="@string/username3_hint"/>
 
     </android.support.design.widget.TextInputLayout>
 
@@ -89,14 +89,14 @@
             android:id="@+id/password3EditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Password3"/>
+            android:hint="@string/password3_hint"/>
 
     </android.support.design.widget.TextInputLayout>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Save"
+        android:text="@string/creds_save_button_text"
         android:id="@+id/saveButton"
         android:layout_below="@+id/password3TextInputLayout"
         android:layout_centerHorizontal="true" />

@@ -20,6 +20,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+/**
+ * This class represents changing of credentials outside of Smart Lock. If a saved credential is changed here then
+ * used to Sign In it should be deleted.
+ */
 public class ChangeCredActivity extends AppCompatActivity {
 
     private TextInputLayout mUsername1TextInputLayout;
@@ -58,7 +62,7 @@ public class ChangeCredActivity extends AppCompatActivity {
                 UsernamesAndPasswords.password2 = mPassword2TextInputLayout.getEditText().getText().toString();
                 UsernamesAndPasswords.username3 = mUsername3TextInputLayout.getEditText().getText().toString();
                 UsernamesAndPasswords.password3 = mPassword3TextInputLayout.getEditText().getText().toString();
-                Toast.makeText(v.getContext(), "Credentials updated outside Smart Lock.", Toast.LENGTH_LONG).show();
+                Toast.makeText(v.getContext(), R.string.creds_updated_msg, Toast.LENGTH_LONG).show();
             }
         });
     }
