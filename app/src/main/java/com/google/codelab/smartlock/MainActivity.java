@@ -127,28 +127,29 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     @Override
                     public void onResult(CredentialRequestResult credentialRequestResult) {
                         mIsRequesting = false;
+                        Status status = credentialRequestResult.getStatus();
                         if (credentialRequestResult.getStatus().isSuccess()) {
                             // Successfully read the credential without any user interaction, this
                             // means there was only a single credential and the user has auto
                             // sign-in enabled.
                             Credential credential = credentialRequestResult.getCredential();
                             processRetrievedCredential(credential);
-                        } else {
-                            Status status = credentialRequestResult.getStatus();
+                        } else if (status.getStatusCode() == CommonStatusCodes.RESOLUTION_REQUIRED) {
                             setFragment(null);
-                            if (status.getStatusCode() == CommonStatusCodes.SIGN_IN_REQUIRED) {
-                                // This is most likely the case where the user does not currently
-                                // have any saved credentials and thus needs to provide a username
-                                // and password to sign in.
-                                Log.d(TAG, "Sign in required");
-                                setSignInEnabled(true);
-                            } else if (status.getStatusCode() == CommonStatusCodes.RESOLUTION_REQUIRED) {
-                                // This is most likely the case where the user has multiple saved
-                                // credentials and needs to pick one.
-                                resolveResult(status, RC_READ);
-                            } else {
-                                Log.w(TAG, "Unexpected status code: " + status.getStatusCode());
-                            }
+                            // This is most likely the case where the user has multiple saved
+                            // credentials and needs to pick one.
+                            resolveResult(status, RC_READ);
+                        } else if (status.getStatusCode() == CommonStatusCodes.SIGN_IN_REQUIRED) {
+                            setFragment(null);
+                            // This is most likely the case where the user does not currently
+                            // have any saved credentials and thus needs to provide a username
+                            // and password to sign in.
+                            Log.d(TAG, "Sign in required");
+                            setSignInEnabled(true);
+                        } else {
+                            Log.w(TAG, "Unrecognized status code: " + status.getStatusCode());
+                            setFragment(null);
+                            setSignInEnabled(true);
                         }
                     }
                 }
