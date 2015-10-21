@@ -123,6 +123,9 @@ public class SignInFragment extends Fragment {
      * @param enable Enable form when true, disable when false.
      */
     protected void setSignEnabled(boolean enable) {
+        if (!isVisible()) {
+            return;
+        }
         mSignInButton.setEnabled(enable);
         mUsernameEditText.setEnabled(enable);
         mPasswordEditText.setEnabled(enable);

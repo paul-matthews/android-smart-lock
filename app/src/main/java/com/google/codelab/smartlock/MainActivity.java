@@ -13,6 +13,7 @@
  */
 package com.google.codelab.smartlock;
 
+import android.support.v4.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Bundle;
@@ -49,13 +50,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private GoogleApiClient mGoogleApiClient;
     private boolean mIsResolving;
     private boolean mIsRequesting;
+    private Fragment mCurrentFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        setFragment(getIntent());
+        if (isFirstRun()) {
+            setSplashState();
+        } else {
+            setSignInPromptState();
+        }
 
         if (savedInstanceState != null) {
             mIsResolving = savedInstanceState.getBoolean(IS_RESOLVING);
@@ -87,7 +93,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         if (!mIsResolving) {
             // For the purposes of this code lab an artificial delay is introduced if the splash fragment is shown.
             // If the splash fragment is not being shown then credentials are immediately requested.
-            if (onSplashFragment()) {
+            if (isFirstRun()) {
+                setSplashState();
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -95,9 +102,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     }
                 }, DELAY_MILLIS);
             } else {
+                setSignInDisabledState();
                 requestCredentials();
             }
-
         }
     }
 
@@ -115,7 +122,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
      * Request Credentials from the Credentials API.
      */
     private void requestCredentials() {
-        setSignInEnabled(false);
         mIsRequesting = true;
 
         CredentialRequest request = new CredentialRequest.Builder()
@@ -135,21 +141,19 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                             Credential credential = credentialRequestResult.getCredential();
                             processRetrievedCredential(credential);
                         } else if (status.getStatusCode() == CommonStatusCodes.RESOLUTION_REQUIRED) {
-                            setFragment(null);
+                            setSignInPromptState();
                             // This is most likely the case where the user has multiple saved
                             // credentials and needs to pick one.
                             resolveResult(status, RC_READ);
                         } else if (status.getStatusCode() == CommonStatusCodes.SIGN_IN_REQUIRED) {
-                            setFragment(null);
+                            setSignInPromptState();
                             // This is most likely the case where the user does not currently
                             // have any saved credentials and thus needs to provide a username
                             // and password to sign in.
                             Log.d(TAG, "Sign in required");
-                            setSignInEnabled(true);
                         } else {
                             Log.w(TAG, "Unrecognized status code: " + status.getStatusCode());
-                            setFragment(null);
-                            setSignInEnabled(true);
+                            setSignInPromptState();
                         }
                     }
                 }
@@ -195,7 +199,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 processRetrievedCredential(credential);
             } else {
                 Log.e(TAG, "Credential Read: NOT OK");
-                //setSignInEnabled(true);
+                setSignInPromptState();
             }
         } else if (requestCode == RC_SAVE) {
             goToContent();
@@ -218,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             Toast.makeText(this, "Retrieved credentials are invalid, so will be deleted.", Toast.LENGTH_LONG).show();
             deleteCredential(credential);
             requestCredentials();
-            setSignInEnabled(false);
+            setSignInDisabledState();
         }
     }
 
@@ -262,28 +266,50 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         });
     }
 
-    /**
-     * Set the appropriate fragment given the state of the Activity and the Intent used to start it.
-     * If the intent is a launcher intent the Splash Fragment is shown otherwise the SignIn Fragment is shown.
-     *
-     * @param intent Intent used to determine which Fragment is used.
-     */
-    private void setFragment(Intent intent) {
-        Fragment fragment;
-        String tag;
-        if (intent != null && intent.hasCategory(Intent.CATEGORY_LAUNCHER)) {
-            fragment = new SplashFragment();
-            tag = SPLASH_TAG;
+    private void setSplashState() {
+        if (mCurrentFragment instanceof SplashFragment) {
+            Log.d(TAG, "Splash already displaying.");
+            return;
+        }
+        Log.d(TAG, "Set or replace Splash Fragment.");
+        setOrReplaceFragment(new SplashFragment());
+    }
+
+    private void setSignInPromptState() {
+        if (mCurrentFragment instanceof SignInFragment) {
+            Log.d(TAG, "Sign-In already displaying - enabled.");
+            ((SignInFragment) mCurrentFragment).setSignEnabled(true);
+            return;
+        }
+        Log.d(TAG, "Set or replace Sign-In Fragment - enabled.");
+        SignInFragment siFragment = new SignInFragment();
+        siFragment.setSignEnabled(true);
+        setOrReplaceFragment(siFragment);
+    }
+
+    private void setSignInDisabledState() {
+        if (mCurrentFragment instanceof SignInFragment) {
+            Log.d(TAG, "Sign-In already displaying - setting disabled.");
+            ((SignInFragment) mCurrentFragment).setSignEnabled(false);
+            return;
+        }
+        Log.d(TAG, "Set or replace Sign-In Fragment - disabled.");
+        SignInFragment siFragment = new SignInFragment();
+        siFragment.setSignEnabled(false);
+        setOrReplaceFragment(siFragment);
+    }
+
+    private void setOrReplaceFragment(Fragment fragment) {
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        if (mCurrentFragment != null) {
+            Log.d(TAG, "Fragment already set.");
+            transaction.replace(R.id.fragment_container, fragment);
         } else {
-            fragment = new SignInFragment();
-            tag = SIGN_IN_TAG;
+            Log.d(TAG, "Fragment not set.");
+            transaction.add(R.id.fragment_container, fragment);
         }
-        String currentTag = getCurrentFragmentTag();
-        if (currentTag == null || !currentTag.equals(tag)) {
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, fragment, tag)
-                    .commit();
-        }
+        mCurrentFragment = fragment;
+        transaction.commit();
     }
 
     /**
@@ -295,41 +321,16 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     /**
-     * If the currently displayed Fragment is the SignIn Fragment then enable or disable the sign in form.
-     *
-     * @param enable Enable form when true, disable form when false.
-     */
-    private void setSignInEnabled(boolean enable) {
-        Fragment fragment = getSupportFragmentManager().findFragmentByTag(SIGN_IN_TAG);
-        if (fragment != null && fragment.isVisible()) {
-            ((SignInFragment) fragment).setSignEnabled(enable);
-        }
-    }
-
-    /**
-     * Get the tag of the currently set Fragment.
-     *
-     * @return Tag of currently set Fragment, or null if no fragment is set.
-     */
-    private String getCurrentFragmentTag() {
-        List<Fragment> fragmentList = getSupportFragmentManager().getFragments();
-        if (fragmentList == null || fragmentList.size() == 0) {
-            return null;
-        }
-        Fragment fragment = fragmentList.get(0);
-        if (fragment != null) {
-            return fragment.getTag();
-        }
-        return null;
-    }
-
-    /**
      * Check if the Splash Fragment is the currently selected Fragment.
      *
      * @return true if Splash Fragment is the current Fragment, false otherwise.
      */
-    private boolean onSplashFragment() {
-        return getCurrentFragmentTag().equals(SPLASH_TAG);
+    private boolean inSplashState() {
+        return mCurrentFragment instanceof SplashFragment;
+    }
+
+    private boolean isFirstRun() {
+        return getIntent().hasCategory(Intent.CATEGORY_LAUNCHER);
     }
 
     protected boolean isResolving() {
@@ -339,5 +340,4 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     protected boolean isRequesting() {
         return mIsRequesting;
     }
-
 }
