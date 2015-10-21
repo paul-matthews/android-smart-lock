@@ -41,8 +41,8 @@ public class ContentActivity extends AppCompatActivity implements GoogleApiClien
                 .addApi(Auth.CREDENTIALS_API)
                 .build();
 
-        Button logoutButton = (Button) findViewById(R.id.logoutButton);
-        logoutButton.setOnClickListener(new View.OnClickListener() {
+        Button signOutButton = (Button) findViewById(R.id.signOutButton);
+        signOutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Auth.CredentialsApi.disableAutoSignIn(mGoogleApiClient);

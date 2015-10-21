@@ -11,7 +11,7 @@
         android:layout_width="@dimen/content_button_width"
         android:layout_height="wrap_content"
         android:text="@string/sign_out_button_text"
-        android:id="@+id/logoutButton"
+        android:id="@+id/signOutButton"
         android:layout_gravity="center_horizontal"/>
 
     <Button

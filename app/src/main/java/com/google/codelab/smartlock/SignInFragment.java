@@ -80,12 +80,6 @@ public class SignInFragment extends Fragment {
                 String username = mUsernameTextInputLayout.getEditText().getText().toString();
                 String password = mPasswordTextInputLayout.getEditText().getText().toString();
 
-//                if (CodelabUtil.isValidCredential(username, password)) {
-//                    mUsername = username;
-//                    goToContent();
-//                } else {
-//                    Log.d(TAG, "Credentials are invalid. Username or password are incorrect.");
-//                }
                 Credential credential = new Credential.Builder(username)
                         .setPassword(password)
                         .build();
