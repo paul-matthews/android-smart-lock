@@ -19,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
@@ -63,6 +64,12 @@ public class ContentActivity extends AppCompatActivity implements GoogleApiClien
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        setUser();
+    }
+
+    @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
         Log.d(TAG, "GoogleApiClient connection failed.");
     }
@@ -75,5 +82,18 @@ public class ContentActivity extends AppCompatActivity implements GoogleApiClien
     @Override
     public void onConnectionSuspended(int i) {
 
+    }
+
+    public void setUser() {
+        String prefix = getResources().getString(R.string.content_user);
+        String user = CodelabUtil.getUser();
+        if (user == null) {
+            user = getResources().getString(R.string.content_user_default);
+        }
+        getUserView().setText(prefix + " " + user);
+    }
+
+    protected TextView getUserView() {
+        return (TextView) findViewById(R.id.contentUser);
     }
 }

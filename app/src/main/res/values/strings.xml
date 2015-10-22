@@ -19,4 +19,6 @@
     <string name="sign_in_button_text">Sign In</string>
     <string name="password_hint">Password</string>
     <string name="username_hint">Username</string>
+    <string name="content_user_default">Unkown</string>
+    <string name="content_user">User: </string>
 </resources>

@@ -13,12 +13,12 @@
  */
 package com.google.codelab.smartlock;
 
-import android.support.v4.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
@@ -32,8 +32,6 @@ import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
-
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
@@ -213,6 +211,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
      */
     private void processRetrievedCredential(Credential credential) {
         if (CodelabUtil.isValidCredential(credential)) {
+            CodelabUtil.setUser(credential);
             goToContent();
         } else {
             // This is likely due to the credential being changed outside of Smart Lock,
@@ -231,13 +230,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
      *
      * @param credential Credential to be saved, this is assumed to be a valid credential.
      */
-    protected void saveCredential(Credential credential) {
+    protected void saveCredential(final Credential credential) {
         // Credential is valid so save it.
         Auth.CredentialsApi.save(mGoogleApiClient, credential).setResultCallback(new ResultCallback<Status>() {
             @Override
             public void onResult(Status status) {
                 if (status.isSuccess()) {
                     Log.d(TAG, "Credential saved");
+                    CodelabUtil.setUser(credential);
                     goToContent();
                 } else {
                     Log.d(TAG, "Attempt to save credential failed " + status.getStatusMessage() + " " + status.getStatusCode());

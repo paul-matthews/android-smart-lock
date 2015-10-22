@@ -13,9 +13,23 @@
  */
 package com.google.codelab.smartlock;
 
+import android.util.Log;
+
 import com.google.android.gms.auth.api.credentials.Credential;
 
 public class CodelabUtil {
+    private static final String TAG = CodelabUtil.class.getSimpleName();
+    public static String mUser;
+
+    public static void setUser(Credential credential) {
+        mUser = credential.getId();
+        Log.d(TAG, "Setting user: " + mUser);
+    }
+
+    public static String getUser() {
+        Log.d(TAG, "Getting user: " + mUser);
+        return mUser;
+    }
 
     /**
      * Check whether or not given Credential matches credentials stored in UsernamesAndPasswords class.
