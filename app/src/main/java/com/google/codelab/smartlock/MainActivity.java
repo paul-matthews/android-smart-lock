@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private static final String IS_RESOLVING = "isResolving";
     private static final String SPLASH_TAG = "splash_fragment";
     private static final String SIGN_IN_TAG = "sign_in_fragment";
-    public static final int DELAY_MILLIS = 3000;
+    public static final int SIMULATION_DELAY_MILLIS = 3000;
 
     // Add mGoogleApiClient and mIsResolving fields here.
     private GoogleApiClient mGoogleApiClient;
@@ -93,12 +93,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             // If the splash fragment is not being shown then credentials are immediately requested.
             if (isFirstRun()) {
                 setSplashState();
-                new Handler().postDelayed(new Runnable() {
+                simulateNetworkDelay(new Runnable() {
                     @Override
                     public void run() {
                         requestCredentials();
                     }
-                }, DELAY_MILLIS);
+                });
             } else {
                 setSignInDisabledState();
                 requestCredentials();
@@ -339,5 +339,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     protected boolean isRequesting() {
         return mIsRequesting;
+    }
+
+    protected void simulateNetworkDelay(Runnable action) {
+        new Handler().postDelayed(action, SIMULATION_DELAY_MILLIS);
     }
 }
